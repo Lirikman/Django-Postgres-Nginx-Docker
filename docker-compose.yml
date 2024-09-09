@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: it12345
+      POSTGRES_DB: django_db
+    ports:
+      - "5432:5432"
+  django-app:
+    build:
+      context: ./it_profi
+    container_name: django_project
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+#    network_mode: host
+    environment:
+      DEBUG: 'False'
+      DB_NAME: 'django_db'
+      DB_USER: 'admin'
+      DB_PASSWORD: 'it12345'
+      DB_HOST: 'postgres'
+      DB_PORT: 5432
