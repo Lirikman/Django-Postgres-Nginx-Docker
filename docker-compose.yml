@@ -1,41 +1,44 @@
 version: "3.8"
 
 services:
-  postgres:
-    image: postgres:13
-    container_name: postgres
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: it12345
-      POSTGRES_DB: django_db
+  db:
+    image: postgres:12.4
     ports:
       - "5432:5432"
-  django-app:
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - it_profi/.env
+  django:
     build:
       context: ./it_profi
-    container_name: django_project
     ports:
-      - "5000:5000"
+      - "8000:8000"
     depends_on:
-      - postgres
-    environment:
-      DEBUG: 'False'
-      DB_NAME: 'django_db'
-      DB_USER: 'admin'
-      DB_PASSWORD: 'it12345'
-      DB_HOST: 'localhost'
-      DB_PORT: 5432
+      - db
+    restart: always
+    env_file:
+      - it_profi/.env
     volumes:
-      - static_volume:/app/static
+      - static:/code/static
+      - media:/code/media
+      - nginx_conf:/code/nginx.conf
+    entrypoint: /code/entrypoint.sh
   nginx:
-    image: nginx:latest
-    volumes:
-      - ./conf/nginx.conf:/etc/nginx/nginx.conf
-      - static_volume:/static
+    image: nginx:1.19.0-alpine
     ports:
       - "80:80"
+    volumes:
+      - static:/code/static
+      - media:/code/media
+      - nginx_conf:/etc/nginx/conf.d/
     depends_on:
-      - django-app
+      - django
+    restart: always
 
 volumes:
-  static_volume:
+  postgres_data:
+  static:
+  media:
+  nginx_conf:
